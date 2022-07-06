@@ -14,7 +14,7 @@ while [ "$#" -gt "0" ]; do
 			echo "Options available:"
 			echo "-h , --help : lists this help"
 			echo "-t , --tile : tile the gif to fit the picture (TODO!)"
-			echo "-m=foo , -mask=foo : use the file foo for a mask (this copies the alpha channel of the template)"
+			echo "-m=foo , --mask=foo : use the file foo for a mask (this copies the alpha channel of the template)"
 		;;
 		
 		-t | --tile)
