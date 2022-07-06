@@ -3,6 +3,7 @@
 # gifoverlay.sh: a tool to overlay pictures on top of a possibly tiling gif (TODO)
 
 TILE=0
+mask="none"
 
 while [ "$#" -gt "0" ]; do
 	case $1 in
@@ -13,24 +14,25 @@ while [ "$#" -gt "0" ]; do
 			echo "Options available:"
 			echo "-h , --help : lists this help"
 			echo "-t , --tile : tile the gif to fit the picture (TODO!)"
+			echo "-m=foo , -mask=foo : use the file foo for a mask (this copies the alpha channel of the template)"
 		;;
 		
 		-t | --tile)
 			TILE=1
 		;;
 
+		-m=* | --mask=* )
+			mask="`echo ${1} | cut -d '=' -f 2`"
+			echo "Mask file: ${mask}"
+			
+		;;
+
 		*) #done reading options, assume the rest are file names.
-			#inFile="$1"
-			#fileExt="${1#*.}"
-			#destFile="${1%.*}"
-			#monogif="${destFile}_mono.${fileExt}"
-			#finally convert file to grayscale
-			#convert ${1} -modulate 100,0,100 ${monogif}
 			
 			#just get start frame
 			#gifsize=`identify -ping -format '%w %h' ${1}[0]` 
-			gifwidth=`identify -ping -format '%w' ${1}[0]`
-			gifheight=`identify -ping -format '%h' ${1}[0]`
+			#gifwidth=`identify -ping -format '%w' ${1}[0]`
+			#gifheight=`identify -ping -format '%h' ${1}[0]`
 			let gifarea=`identify -ping -format '%w*%h' ${1}[0]`
 			
 			#imgsize=`identify -ping -format '%w %h' ${2}`
@@ -39,17 +41,42 @@ while [ "$#" -gt "0" ]; do
 			let imgarea=`identify -ping -format '%w*%h' ${2}`
 			
 			if [ ${gifarea} -gt ${imgarea} ]; then
-				convert \( \( ${1} -modulate 100,0,100 -coalesce \) -filter lanczos -resize ${imgwidth}x${imgheight}^ -crop ${imgwidth}x${imgwidth}+0+0 +repage -coalesce \) null: ${2} -compose Overlay -layers composite -layers optimize output.gif
-			fi
-
-			if [ ${gifarea} -lt ${imgarea} ]; then
-				convert \( \( \( ${1} -modulate 100,0,100 -coalesce \) -filter point -resize ${imgwidth}x${imgheight}^ +repage \) -crop ${imgwidth}x${imgwidth}+0+0 +repage -coalesce \) null: ${2} -compose Overlay -layers composite -layers optimize output.gif
-				
+				filter="lanczos"
+			else
+				filter="point"
 			fi
 			
-			if [ ${gifarea} -eq ${imgarea} ]; then
-			convert \( ${1} -modulate 100,0,100 -coalesce \) null: ${2} -compose Overlay -layers composite -layers optimize output.gif
+			if [ ${mask} != "none" ]; then
 				
+				let maskarea=`identify -ping -format '%w*%h' ${mask}`
+				maskwidth=`magick identify -format '%w' ${mask}[${imgwidth}x${imgheight}]`
+				maskheight=`magick identify -format '%h' ${mask}[${imgwidth}x${imgheight}]`
+				let maskoffset="( ${imgwidth} / 2 ) - ( ${maskwidth} / 2 )"
+				echo "mask width: ${maskwidth}"
+				echo "mask offset: ${maskoffset}"
+
+				if [ ${maskarea} -gt ${imgarea} ]; then
+					maskfilter="lanczos"
+				else
+					maskfilter="point"
+				fi
+
+
+				if [ ${imgarea} -eq ${maskarea} ]; then
+					convert \( \( ${1} -modulate 100,0,100 -coalesce \) null: ${2} -compose Overlay -layers composite \) -coalesce null: ${mask} -compose CopyOpacity -layers composite output.gif
+				else
+					convert \( \( \( ${1} -modulate 100,0,100 -coalesce \) -filter ${filter} -resize ${imgwidth}x${imgheight}^ -crop ${imgwidth}x${imgwidth}+0+0 +repage -coalesce \) null: ${2} -compose Overlay -layers composite \) null: \( ${mask} -filter ${maskfilter} -resize ${imgwidth}x${imgheight} +repage -coalesce \) -gravity center -compose CopyOpacity -layers composite -coalesce output.gif
+					mogrify -coalesce -crop ${maskwidth}x${imgheight}+${maskoffset}+0 output.gif
+				fi
+				
+			else
+				if [ ${gifarea} -eq ${imgarea} ]; then
+					convert \( ${1} -modulate 100,0,100 -coalesce \) null: ${2} -compose Overlay -layers composite -layers optimize output.gif
+				
+				else
+					convert \( \( ${1} -modulate 100,0,100 -coalesce \) -filter ${filter} -resize ${imgwidth}x${imgheight}^ -crop ${imgwidth}x${imgwidth}+0+0 +repage -coalesce \) null: ${2} -compose Overlay -layers composite -layers optimize output.gif
+				
+				fi
 			fi
 
 			break
