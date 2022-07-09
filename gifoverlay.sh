@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# gifoverlay.sh: a tool to overlay pictures on top of a possibly tiling gif (TODO)
+# gifoverlay.sh: a tool to overlay pictures on top of a possibly tiling gif
 
 tile=0
 optimize=0
@@ -15,7 +15,7 @@ while [ "$#" -gt "0" ]; do
 			echo "usage: gifoverlay.sh [options] [gif to use as template] [image to overlay]"
 			echo "Options available:"
 			echo "-h , --help : lists this help"
-			echo "-t , --tile : tile the gif to fill (aka make sure the gif covers the entire thing) the image then crop to image"
+			echo "-t , --tile : tile the gif"
 			echo "-m=foo , --mask=foo : use the file foo for a mask (this copies the alpha channel of the template) (thanks to @piconaut for help!)"
 			echo "-o , --optimize : optimize the gif layers."
 			echo "-f=bar , --file=bar : save to the file named bar"
@@ -43,12 +43,12 @@ while [ "$#" -gt "0" ]; do
 		*) #done reading options, assume the rest are file names.
 			
 			#just get start frame
-			gifsize=`identify -ping -format '%w%h' ${1}[0]` 
-			gifwidth=`identify -ping -format '%w' ${1}[0]`
-			gifheight=`identify -ping -format '%h' ${1}[0]`
+			gifsize=`identify -format '%w%h' ${1}[0]` 
+			gifwidth=`identify -format '%w' ${1}[0]`
+			gifheight=`identify -format '%h' ${1}[0]`
 			let gifarea=`identify -format '%w*%h' ${1}[0]`
 			
-			imgsize=`identify -ping -format '%w%h' ${2}`
+			imgsize=`identify -format '%w%h' ${2}`
 			imgwidth=`identify -format '%w' ${2}`
 			imgheight=`identify -format '%h' ${2}`
 			let imgarea=`identify -format '%w*%h' ${2}`
@@ -61,8 +61,8 @@ while [ "$#" -gt "0" ]; do
 			
 			if [ ${mask} != "none" ]; then
 				
-				masksize=`identify -ping -format '%w%h' ${mask}`
-				let maskarea=`identify -ping -format '%w*%h' ${mask}`
+				masksize=`identify -format '%w%h' ${mask}`
+				let maskarea=`identify -format '%w*%h' ${mask}`
 				maskwidth=`magick identify -format '%w' ${mask}[${imgwidth}x${imgheight}]`
 				maskheight=`magick identify -format '%h' ${mask}[${imgwidth}x${imgheight}]`
 				let maskoffset="( ${imgwidth} / 2 ) - ( ${maskwidth} / 2 )"
@@ -81,8 +81,14 @@ while [ "$#" -gt "0" ]; do
 			
 			# handle size difference between gif and img (and tiling)
 			if [ ${tile} -eq 1 ]; then
-				echo "+++++++ TODO! sorry... but we must end the program here (or it will fail horribly) +++++++"
-				exit 1
+				#let widthtile="( ${imgwidth} / ${gifwidth} ) + 1"
+				#let heighttile="( ${imgheight} / ${gifheight} ) + 1"
+				#echo "tile count: ${widthtile}x${heighttile}"
+
+				#magick convert -size ${imgwidth}x${imgheight} -coalesce tile:${1} tempout.gif
+				#magick montage -coalesce ${1} -tile ${widthtile}x${heighttile} -geometry +0+0 tempout.gif
+				magick tempout.gif -coalesce -virtual-pixel tile -set option:distort:viewport ${imgwidth}x${imgheight} -distort SRT 0 -loop 0 tempout.gif
+				
 			elif [ ${gifsize} -eq ${imgsize} ]; then
 				: #do nothing.
 			else
