@@ -15,7 +15,7 @@ Options available:
 
 -h , --help : lists this help
 
--t , --tile : tile the gif
+-t , --tile : tile the gif (thanks to stackoverflow user GeeMack!)
 
 -m=foo , --mask=foo : use the file foo for a mask (this copies the alpha channel of the template) (thanks to @piconaut for help!)
 
