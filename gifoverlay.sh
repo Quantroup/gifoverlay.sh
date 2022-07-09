@@ -15,7 +15,7 @@ while [ "$#" -gt "0" ]; do
 			echo "usage: gifoverlay.sh [options] [gif to use as template] [image to overlay]"
 			echo "Options available:"
 			echo "-h , --help : lists this help"
-			echo "-t , --tile : tile the gif"
+			echo "-t , --tile : tile the gif (thanks to stackoverflow user GeeMack!)"
 			echo "-m=foo , --mask=foo : use the file foo for a mask (this copies the alpha channel of the template) (thanks to @piconaut for help!)"
 			echo "-o , --optimize : optimize the gif layers."
 			echo "-f=bar , --file=bar : save to the file named bar"
