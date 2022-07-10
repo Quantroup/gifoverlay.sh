@@ -22,3 +22,7 @@ Options available:
 -o , --optimize : optimize the gif layers.
 
 -f=bar , --file=bar : save to the file named bar
+
+-s=100 , --saturation=100 : set the image saturation to 100% (no change)
+
+-b=100 , --brightness=100 : set the image brightness to 100% (no change)
