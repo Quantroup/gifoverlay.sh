@@ -6,6 +6,8 @@ tile=0
 optimize=0
 filename="output.gif"
 mask="none"
+imgbrightness=100
+imgsaturation=100
 
 while [ "$#" -gt "0" ]; do
 	case $1 in
@@ -19,6 +21,8 @@ while [ "$#" -gt "0" ]; do
 			echo "-m=foo , --mask=foo : use the file foo for a mask (this copies the alpha channel of the template) (thanks to @piconaut for help!)"
 			echo "-o , --optimize : optimize the gif layers."
 			echo "-f=bar , --file=bar : save to the file named bar"
+			echo "-s=100 , --saturation=100 : set the image saturation to 100% (no change)"
+			echo "-b=100 , --brightness=100 : set the image brightness to 100% (no change)"
 		;;
 		
 		-t | --tile)
@@ -28,6 +32,16 @@ while [ "$#" -gt "0" ]; do
 		-m=* | --mask=* )
 			mask="`echo ${1} | cut -d '=' -f 2`"
 			echo "Mask file: ${mask}"
+			
+		;;
+
+		-b=* | --brightness=* )
+			imgbrightness="`echo ${1} | cut -d '=' -f 2`"
+			
+		;;
+
+		-s=* | --saturation=* )
+			imgsaturation="`echo ${1} | cut -d '=' -f 2`"
 			
 		;;
 
@@ -96,7 +110,7 @@ while [ "$#" -gt "0" ]; do
 			fi
 
 			# overlay image ontop of the gif
-			magick tempout.gif  null: ${2} -gravity west -compose Overlay -layers composite tempout.gif
+			magick tempout.gif  null: \( ${2} -modulate ${imgbrightness},${imgsaturation} \) -gravity west -compose Overlay -layers composite tempout.gif
 
 			# process mask
 			if [ ${mask} = "none" ]; then
@@ -112,6 +126,7 @@ while [ "$#" -gt "0" ]; do
 			
 			if [ ${optimize} -eq 1 ]; then
 				magick tempout.gif -layers optimize ${filename}
+				rm tempout.gif
 			else
 				mv tempout.gif ${filename}
 			fi
